@@ -17,10 +17,10 @@ activate ()
     fi
 
     # If this isn't done, configure tries to use native windows paths, which makes itself panic
+    export CC="$(which gcc)"
     export LD="$(which ld)"
     export AR="$(which ar)"
     export AS="$(which as)"
-    export LD="$(which ld)"
     export NM="$(which nm)"
     export OBJCOPY="$(which objcopy)"
     export OBJDUMP="$(which objdump)"
@@ -29,6 +29,7 @@ activate ()
     export STRIP="$(which strip)"
     export WINDRES="$(which windres)"
 
+    export CC_FOR_BUILD="$CC"
     export AR_FOR_BUILD="$AR"
     export AS_FOR_BUILD="$AS"
     export LD_FOR_BUILD="$LD"
@@ -40,6 +41,7 @@ activate ()
     export STRIP_FOR_BUILD="$STRIP"
     export WINDRES_FOR_PATH="$WINDRES"
 
+    export CC_FOR_HOST="$CC"
     export AR_FOR_HOST="$AR"
     export AS_FOR_HOST="$AS"
     export LD_FOR_HOST="$LD"
@@ -51,15 +53,23 @@ activate ()
     export STRIP_FOR_HOST="$STRIP"
     export WINDRES_FOR_HOST="$WINDRES"
 
-    export AR_FOR_TARGET="$toolchain/bin/$target-ar.exe"
-    export AS_FOR_TARGET="$toolchain/bin/$target-as.exe"
-    export LD_FOR_TARGET="$toolchain/bin/$target-ld.exe"
-    export NM_FOR_TARGET="$toolchain/bin/$target-nm.exe"
-    export OBJCOPY_FOR_TARGET="$toolchain/bin/$target-objcopy"
-    export OBJDUMP_FOR_TARGET="$toolchain/bin/$target-objdump"
-    export RANLIB_FOR_TARGET="$toolchain/bin/$target-ranlib.exe"
-    export READELF_FOR_TARGET="$toolchain/bin/$target-readelf.exe"
-    export STRIP_FOR_TARGET="$toolchain/bin/$target-strip.exe"
+    export CC_FOR_TARGET="$host_tools/bin/$target-gcc"
+    export AR_FOR_TARGET="$host_tools/bin/$target-ar"
+    export AS_FOR_TARGET="$host_tools/bin/$target-as"
+    export LD_FOR_TARGET="$host_tools/bin/$target-ld"
+    export NM_FOR_TARGET="$host_tools/bin/$target-nm"
+    export OBJCOPY_FOR_TARGET="$host_tools/bin/$target-objcopy"
+    export OBJDUMP_FOR_TARGET="$host_tools/bin/$target-objdump"
+    export RANLIB_FOR_TARGET="$host_tools/bin/$target-ranlib"
+    export READELF_FOR_TARGET="$host_tools/bin/$target-readelf"
+    export STRIP_FOR_TARGET="$host_tools/bin/$target-strip"
+
+    # export _old_cpp_flags="$CPPFLAGS"
+    # export _old_ld_flags="$LDFLAGS"
+    # export _old_pkg_config_path="$PKG_CONFIG_PATH"
+    # export CPPFLAGS="-I$host_tools/include"
+    # export LDFLAGS="-L$host_tools/lib"
+    # export PKG_CONFIG_PATH="$host_tools/lib/pkgconfig"
 
     export _host_env_old_path="$PATH"
 
@@ -79,6 +89,7 @@ activate ()
 
 deactivate ()
 {
+    unset CC
     unset LD
     unset AR
     unset AS
@@ -90,6 +101,7 @@ deactivate ()
     unset READELF
     unset STRIP
 
+    unset CC_FOR_BUILD
     unset AR_FOR_BUILD
     unset AS_FOR_BUILD
     unset LD_FOR_BUILD
@@ -100,6 +112,7 @@ deactivate ()
     unset READELF_FOR_BUILD
     unset STRIP_FOR_BUILD
 
+    unset CC_FOR_HOST
     unset AR_FOR_HOST
     unset AS_FOR_HOST
     unset LD_FOR_HOST
@@ -110,6 +123,7 @@ deactivate ()
     unset READELF_FOR_HOST
     unset STRIP_FOR_HOST
 
+    unset CC_FOR_TARGET
     unset AR_FOR_TARGET
     unset AS_FOR_TARGET
     unset LD_FOR_TARGET
@@ -119,6 +133,13 @@ deactivate ()
     unset RANLIB_FOR_TARGET
     unset READELF_FOR_TARGET
     unset STRIP_FOR_TARGET
+
+    # export CPPFLAGS="$_old_cpp_flags"
+    # export LDFLAGS="$_old_ld_flags"
+    # export PKG_CONFIG_PATH="$_old_pkg_config_path"
+    # unset _old_cpp_flags
+    # unset _old_ld_flags
+    # unset _old_pkg_config_path
 
     if [[ -n ${_host_env_old_ps1+x} ]]; then
         export PS1="$_host_env_old_ps1"

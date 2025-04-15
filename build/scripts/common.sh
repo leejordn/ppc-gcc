@@ -30,8 +30,37 @@ EOF
 verify_ucrt64 ()
 {
     if [[ "$(uname -o)" != 'Msys' ]] || [[ "$MSYSTEM" != 'UCRT64' ]]; then
-        echo "Not in a UCRT64 shell. Exiting..." >&2
+        echo "Not in an MSYS2 UCRT64 shell. Exiting..." >&2
         exit $ec_wrong_env
+    fi
+}
+
+
+verify_msys ()
+{
+    if [[ "$(uname -o)" != 'Msys' ]] || [[ "$MSYSTEM" != 'MSYS' ]]; then
+        echo "Not in an MSYS2 MSYS shell. Exiting..." >&2
+        exit $ec_wrong_env
+    fi
+}
+
+
+verify_packages ()
+{
+    local uninstalled=()
+    for package in "$@"; do
+        if ! pacman -Q "$package" &>/dev/null; then
+            uninstalled+=("$package")
+        fi
+    done
+    if (( ${#uninstalled[@]} > 0 )); then
+        echo >&2
+        echo "❌ The following packages are required but not installed:" >&2
+        for pkg in "${uninstalled[@]}"; do
+            echo "  • $pkg" >&2
+        done
+        echo >&2
+        exit 1
     fi
 }
 
@@ -97,7 +126,6 @@ EOF
 
 prepare_for_build () # ARGS: configure_flags
 {
-    verify_ucrt64
     prepare_build_dir
     run_configure $*
 }

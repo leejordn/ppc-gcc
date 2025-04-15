@@ -1,0 +1,26 @@
+# MSYS2 MSYS does not define __caddr_t in system
+
+--- a/sunrpc/rpc/types.h
++++ b/sunrpc/rpc/types.h
+@@ -84,11 +84,20 @@
+ typedef __fsid_t fsid_t;
+ # define __u_char_defined
+ #endif
++
+ #ifndef __daddr_t_defined
+ typedef __daddr_t daddr_t;
++
++#ifndef caddr_t
++# ifdef __caddr_t
+ typedef __caddr_t caddr_t;
++# else /* not defined (__caddr_t) */
++typedef char *caddr_t;
++# endif /* __caddr_t */
++#endif /* caddr_t */
++
+ # define __daddr_t_defined
+-#endif
++#endif /*__daddr_t_defined */
+ 
+ #include <sys/time.h>
+ #include <sys/param.h>

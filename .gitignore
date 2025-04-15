@@ -1,11 +1,15 @@
 ### The massive subprojects and build folders
-sources/**
+sources/*
 -sources/archives/fetch-sources.py
+-sources/patches/*
 
-build/**
+toolchain/*
+-toolchain/.gitkeep
+
+build/*
 -build/host-env.sh
 -build/cross-env.sh
--build/scripts/
+-build/scripts/**
 
 
 ### C ###

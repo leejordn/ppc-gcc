@@ -1,0 +1,14 @@
+# Force inclusion of standard Linux FHS include directories. This breaks when compiling on MSYS2 due
+# to its insufficient pseudo-Unix path deduction (it's a long story, '/' gets translated into
+# C:/ucrt64 or something like that sometimes).
+
+--- a/gcc/gcc.cc
++++ b/gcc/gcc.cc
+@@ -1240,6 +1240,7 @@
+    file that happens to exist is up-to-date.  */
+ static const char *cpp_unique_options =
+ "%{!Q:-quiet} %{nostdinc*} %{C} %{CC} %{v} %@{I*&F*} %{P} %I\
++ %{!nostdinc:-isystem %R/usr/include -isystem %R/include -isystem %R/usr/local/include}\
+  %{MD:-MD %{!o:%b.d}%{o*:%.d%*}}\
+  %{MMD:-MMD %{!o:%b.d}%{o*:%.d%*}}\
+  %{M} %{MM} %{MF*} %{MG} %{MP} %{MQ*} %{MT*}\

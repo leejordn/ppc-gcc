@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 set -e
-set -u
+#set -u
 #set -x # Uncomment to debug
 
 source_name='binutils-2.44'
@@ -28,25 +28,27 @@ prepare_for_build \
     --disable-tui \
     --disable-werror \
     --enable-64-bit-bfd \
+    --enable-gold \
     --enable-initfini-array \
+    --enable-plugins \
     --enable-targets="$binutils_targets" \
     --enable-year2038 \
     --host="$(gcc -dumpmachine)" \
-    --prefix="/" \
+    --prefix="$host_tools" \
     --target="$target" \
-    --with-build-sysroot="$sysroot" \
+    --with-build-sysroot="$host_tools" \
     --with-sysroot="$sysroot_prefix" \
     --without-debuginfod \
     --without-gdb \
     --without-python \
-    --without-x
+    --without-x \
+    ac_cv_search_dlopen=no
 
-    # --enable-plugins \
 
 cd "$build_dir"
-
+make -j$(nproc) configure-host
 make -j$(nproc) LDFLAGS='-all-static'
-make -j(nproc) install DESTDIR="$host_tools"
+make install
 
 # BURN ALL LIBTOOL ARCHIVES - they cause nothing but trouble! Overlinking, disrespecting
 # --with-build-sysroot, and false positives that cause `ld` to freeze. Gentoo, Debian, Arch, Fedora,
