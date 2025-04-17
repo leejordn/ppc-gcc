@@ -6,3 +6,4 @@ mpc-1.2.1=https://gcc.gnu.org/pub/gcc/infrastructure/mpc-1.2.1.tar.gz
 isl-0.24=https://gcc.gnu.org/pub/gcc/infrastructure/isl-0.24.tar.bz2
 libiconv-1.18=https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz
 glibc-2.19=https://ftp.gnu.org/gnu/glibc/glibc-2.19.tar.xz
+make-4.3=https://ftp.gnu.org/gnu/make/make-4.3.tar.gz

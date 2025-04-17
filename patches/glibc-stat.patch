@@ -1,0 +1,80 @@
+diff -ur a/io/fstat.c b/io/fstat.c
+--- a/io/fstat.c
++++ b/io/fstat.c
+@@ -43,6 +43,7 @@
+    functions in the shared library can adapt without needing to recompile
+    all callers.  */
+ 
++#ifndef __USE_EXTERN_INLINES
+ #undef fstat
+ #undef __fstat
+ int
+@@ -53,3 +54,4 @@
+ }
+ 
+ weak_hidden_alias (__fstat, fstat)
++#endif /* __USE_EXTERN_INLINES */
+diff -ur a/io/fstatat.c b/io/fstatat.c
+--- a/io/fstatat.c
++++ b/io/fstatat.c
+@@ -43,6 +43,7 @@
+    functions in the shared library can adapt without needing to recompile
+    all callers.  */
+ 
++#ifndef __USE_EXTERN_INLINES
+ #undef fstatat
+ int
+ attribute_hidden
+@@ -50,3 +51,4 @@
+ {
+   return __fxstatat (_STAT_VER, fd, file, buf, flag);
+ }
++#endif /* __USE_EXTERN_INLINES */
+diff -ur a/io/lstat.c b/io/lstat.c
+--- a/io/lstat.c
++++ b/io/lstat.c
+@@ -43,6 +43,7 @@
+    functions in the shared library can adapt without needing to recompile
+    all callers.  */
+ 
++#ifndef __USE_EXTERN_INLINES
+ #undef lstat
+ #undef __lstat
+ int
+@@ -53,3 +54,4 @@
+ }
+ 
+ weak_hidden_alias (__lstat, lstat)
++#endif /* __USE_EXTERN_INLINES */
+diff -ur a/io/stat.c b/io/stat.c
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -43,6 +43,7 @@
+    functions in the shared library can adapt without needing to recompile
+    all callers.  */
+ 
++#ifndef __USE_EXTERN_INLINES
+ #undef stat
+ int
+ attribute_hidden
+@@ -52,3 +53,4 @@
+ }
+ 
+ weak_hidden_alias (__stat, stat)
++#endif /* __USE_EXTERN_INLINES */
+diff -ur a/io/stat64.c b/io/stat64.c
+--- a/io/stat64.c
++++ b/io/stat64.c
+@@ -43,6 +43,7 @@
+    functions in the shared library can adapt without needing to recompile
+    all callers.  */
+ 
++#ifndef __USE_EXTERN_INLINES
+ #undef stat64
+ int
+ attribute_hidden
+@@ -50,3 +51,4 @@
+ {
+   return __xstat64 (_STAT_VER, file, buf);
+ }
++#endif /* __USE_EXTERN_INLINES */

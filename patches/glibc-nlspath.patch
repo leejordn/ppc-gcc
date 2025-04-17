@@ -1,0 +1,11 @@
+--- a/catgets/Makefile
++++ b/catgets/Makefile
+@@ -39,7 +39,7 @@
+ 
+ $(objpfx)gencat: $(gencat-modules:%=$(objpfx)%.o)
+ 
+-catgets-CPPFLAGS := -DNLSPATH='"$(msgcatdir)/%L/%N:$(msgcatdir)/%L/LC_MESSAGES/%N:$(msgcatdir)/%l/%N:$(msgcatdir)/%l/LC_MESSAGES/%N:"' \
++catgets-CPPFLAGS := -DNLSPATH='"/$(msgcatdir)/%L/%N:/$(msgcatdir)/%L/LC_MESSAGES/%N:/$(msgcatdir)/%l/%N:/$(msgcatdir)/%l/LC_MESSAGES/%N:"' \
+ 	    -DHAVE_CONFIG_H
+ 
+ CPPFLAGS-gencat = -DNOT_IN_libc

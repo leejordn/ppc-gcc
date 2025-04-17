@@ -8,31 +8,16 @@ source_name='glibc-2.19'
 source scripts/common.sh
 source cross-env.sh
 
-verify_msys
-
-# Linaro stuff
-export AUTOCONF=no
-export CC="$target-gcc"
-export CXX="$target-g++"
-export AR="$target-ar"
-export RANLIB="$target-ar"
-
 export BUILD_CC=gcc
-export BUILD_CPPFLAGS=""
-export BUILD_CFLAGS=""
-
-# Linaro does this but never defines the variables?
-# libc_cv_slibdir=$libc_cv_slibdir
-# libc_cv_rtlddir=$libc_cv_rtlddir
 
 parse_cli "$@"
-
+export CFLAGS="-O2 -mcpu=7450 -mtune=7450 -maltivec -mabi=altivec -fcommon"
 prepare_for_build \
-    --build="$(gcc -dumpmachine)"
+    --build="$(gcc -dumpmachine)" \
     --disable-bounded \
     --disable-omitfp \
+    --disable-nls \
     --disable-profile \
-    --disable-sanity-checks \
     --disable-werror \
     --enable-crypt \
     --enable-kernel="2.6.27" \
@@ -48,8 +33,16 @@ prepare_for_build \
     --without-selinux \
     libc_cv_visibility_attribute=yes \
     libc_cv_broken_visibility_attribute=no \
-    libc_cv_forced_unwind=yes
+    libc_cv_forced_unwind=yes \
+    libc_cv_slibdir=/usr/lib \
+    libc_cv_rtlddir=/lib
 
+# --disable-sanity-checks \
+
+PATH="$host_tools/bin:$PATH"
+pwd
+# There seems to be race conditions for parallel builds =( so no -j
+make -C "$source_name"
 make -C "$source_name" \
      install_root="$sysroot" \
      INSTALL="$(which install)" \

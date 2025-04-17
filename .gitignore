@@ -1,15 +1,11 @@
 ### The massive subprojects and build folders
 sources/*
 -sources/archives/fetch-sources.py
--sources/patches/*
 
 toolchain/*
--toolchain/.gitkeep
+-toolchain/powerpc-linux-gnu/sysroot/.gitkeep
 
 build/*
--build/host-env.sh
--build/cross-env.sh
--build/scripts/**
 
 
 ### C ###
