@@ -1,0 +1,85 @@
+diff -ur a/configure b/configure
+--- a/configure	2025-04-18 04:02:03.456997600 +0000
++++ b/configure	2025-04-17 23:03:17.725936100 +0000
+@@ -4710,7 +4710,7 @@
+   ac_prog_version=`$CC -v 2>&1 | sed -n 's/^.*version \([egcygnustpi-]*[0-9.]*\).*$/\1/p'`
+   case $ac_prog_version in
+     '') ac_prog_version="v. ?.??, bad"; ac_verc_fail=yes;;
+-    4.[4-9].* | 4.[1-9][0-9].* | [5-9].* )
++    4.[4-9].* | 4.[1-9][0-9].* | [5-9].* | [1-9][0-9].* )
+        ac_prog_version="$ac_prog_version, ok"; ac_verc_fail=no;;
+     *) ac_prog_version="$ac_prog_version, bad"; ac_verc_fail=yes;;
+ 
+diff -ur a/sunrpc/Makefile b/sunrpc/Makefile
+--- a/sunrpc/Makefile	2025-04-18 02:59:51.977572800 +0000
++++ b/sunrpc/Makefile	2025-04-18 03:04:19.079385900 +0000
+@@ -166,7 +166,7 @@
+ 		$(OUTPUT_OPTION) $(native-compile-mkdep-flags) -c
+ 
+ $(objpfx)cross-rpcgen: $(cross-rpcgen-objs)
+-	$(BUILD_CC) $^ $(BUILD_LDFLAGS) -o $@
++	$(BUILD_CC) $^ $(BUILD_LDFLAGS) -o $@ -lintl
+ 
+ # This makes sure -DNOT_IN_libc is passed for all these modules.
+ cpp-srcs-left := $(rpcgen-objs:.o=.c)
+diff -ur a/sunrpc/rpc/types.h b/sunrpc/rpc/types.h
+--- a/sunrpc/rpc/types.h	2025-04-18 02:59:52.030068600 +0000
++++ b/sunrpc/rpc/types.h	2025-04-18 03:03:44.426270600 +0000
+@@ -84,11 +84,20 @@
+ typedef __fsid_t fsid_t;
+ # define __u_char_defined
+ #endif
++
+ #ifndef __daddr_t_defined
+ typedef __daddr_t daddr_t;
++
++#ifndef caddr_t
++# ifdef __caddr_t
+ typedef __caddr_t caddr_t;
++# else /* not defined (__caddr_t) */
++typedef char *caddr_t;
++# endif /* __caddr_t */
++#endif /* caddr_t */
++
+ # define __daddr_t_defined
+-#endif
++#endif /*__daddr_t_defined */
+ 
+ #include <sys/time.h>
+ #include <sys/param.h>
+diff -ur a/sunrpc/rpc_main.c b/sunrpc/rpc_main.c
+--- a/sunrpc/rpc_main.c	2025-04-18 02:59:52.042183200 +0000
++++ b/sunrpc/rpc_main.c	2025-04-18 07:27:30.412736100 +0000
+@@ -326,9 +326,9 @@
+ static void
+ find_cpp (void)
+ {
+-  struct stat64 buf;
++  struct stat buf;
+ 
+-  if (stat64 (CPP, &buf) == 0)
++  if (stat (CPP, &buf) == 0)
+     return;
+ 
+   if (cppDefined) /* user specified cpp but it does not exist */
+@@ -1114,17 +1114,17 @@
+ static void
+ checkfiles (const char *infile, const char *outfile)
+ {
+-  struct stat64 buf;
++  struct stat buf;
+ 
+   if (infile)			/* infile ! = NULL */
+-    if (stat64 (infile, &buf) < 0)
++    if (stat (infile, &buf) < 0)
+       {
+ 	perror (infile);
+ 	crash ();
+       }
+   if (outfile)
+     {
+-      if (stat64 (outfile, &buf) < 0)
++      if (stat (outfile, &buf) < 0)
+ 	return;			/* file does not exist */
+       else
+ 	{

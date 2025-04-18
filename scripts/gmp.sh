@@ -1,5 +1,9 @@
 #! /usr/bin/env bash
 
+# You will see the following warning in thick red letters:
+# libtool: warning: undefined symbols not allowed in x86_64-w64-mingw32 shared libraries; building static only
+# This is on purpose, we are using --disable-shared when configuring - so no need to worry.
+
 set -e
 set -u
 #set -x # Uncomment to debug
@@ -7,9 +11,9 @@ set -u
 
 script_source=${BASH_SOURCE[0]}
 while [ -L "$script_source" ]; do
-  script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
-  script_source=$(readlink "$script_source")
-  [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
 done
 script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
 source "$script_parent/project_defs.sh"
@@ -20,7 +24,7 @@ source "$project_scripts/host-env.sh"
 
 mkdir -p "$host_tools"
 verify_ucrt64
-select_source 'gmp-6.3.0'
+select_source 'gmp-6.2.1'
 
 do_clean
 do_configure \

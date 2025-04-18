@@ -33,13 +33,13 @@ export target="powerpc-linux-gnu"
 export toolchain="$project_root/toolchain"
 export sysroot_prefix="/$target/sysroot" # Use this as --sysroot in configure scripts
 export sysroot="${toolchain}${sysroot_prefix}" # This is the actual full path to the target sysroot
-export host_tools="$PWD/host-tools"
+export host_tools="$project_builds/host-tools"
 
 
 verify_ucrt64 ()
 {
     if [[ "$(uname -o)" != 'Msys' ]] || [[ "$MSYSTEM" != 'UCRT64' ]]; then
-        echo "Not in an MSYS2 UCRT64 shell. Exiting..." >&2
+        echo "This script must be run in in an MSYS2 UCRT64 shell. Exiting..." >&2
         return $ec_wrong_env
     fi
 }
@@ -48,7 +48,16 @@ verify_ucrt64 ()
 verify_msys ()
 {
     if [[ "$(uname -o)" != 'Msys' ]] || [[ "$MSYSTEM" != 'MSYS' ]]; then
-        echo "Not in an MSYS2 MSYS shell. Exiting..." >&2
+        echo "This script must be run in an MSYS2 MSYS shell. Exiting..." >&2
+        return $ec_wrong_env
+    fi
+}
+
+
+verify_linux ()
+{
+    if [[ "$(uname)" != 'Linux' ]]; then
+        echo "This script must be run in a Linux shell. Exiting..." >&2
         return $ec_wrong_env
     fi
 }
@@ -88,8 +97,8 @@ select_source ()
     export source_path="$project_sources/$source_name"
     export configure="$source_path/configure"
     export build_path="$project_builds/$source_name"
-    if [[ ! -f "$configure" ]]; then
-        echo "Expected file \"$configure\" to exist" >&2
+    if [[ ! -d "$source_path" ]]; then
+        echo "Expected source path \"$source_path\" to exist" >&2
         unset source_path
         unset configure
         unset build_path
@@ -150,4 +159,16 @@ do_make () # ARGS: make flags
         return $ec_invalid_source
     fi
     make -C "$path" "$@"
+}
+
+
+use_host_env ()
+{
+    source "$project_scripts/host-env.sh"
+}
+
+
+use_cross_env ()
+{
+    source "$project_scripts/cross-env.sh"
 }

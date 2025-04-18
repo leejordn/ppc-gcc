@@ -17,14 +17,20 @@
 # >    - use the `-LLIBDIR' linker flag
 
 
-#set -e
-#set -u
+set -euo pipefail
 #set -x # Uncomment to debug
 
-gcc_version="14.2.0"
-source_name="gcc-${gcc_version}"
-source scripts/common.sh
-source host-env.sh
+script_source=${BASH_SOURCE[0]}
+while [ -L "$script_source" ]; do
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+done
+script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+source "$script_parent/project_defs.sh"
+unset script_parent
+unset script_source
+
 
 # NOTE ABOUT THE --prefix CONFIGURE FLAG:
 #
@@ -57,10 +63,17 @@ source host-env.sh
 # Bottom line: On MSYS2, --prefix must be absolute if you want reliable behavior. DESTDIR-based
 # installs and flat prefixes ('/') are simply not portable here.
 
-CFLAGS="-O2"
 
-parse_cli "$@"
-prepare_for_build \
+verify_ucrt64
+use_host_env
+
+# export BUILD_CPPFLAGS="-I$host_tools/include"
+# export BUILD_LDFLAGS="-L$host_tools/lib"
+
+select_source 'gcc-14.2.0'
+do_clean
+do_configure \
+    --build="$(gcc -dumpmachine)" \
     --disable-libatomic \
     --disable-libgomp \
     --disable-libmudflap \
@@ -68,14 +81,17 @@ prepare_for_build \
     --disable-libssp \
     --disable-nls \
     --disable-threads \
-    --enable-__cxa_atexit \
     --enable-languages=c \
     --enable-mingw-wildcard \
     --enable-shared \
-    --prefix="/" \
+    --host="$(gcc -dumpmachine)" \
+    --prefix="$toolchain" \
     --target="$target" \
     --with-build-sysroot="$sysroot" \
     --with-libiconv-prefix="$host_tools" \
+    --with-libiconv-type="static" \
+    --with-libintl-prefix="$host_tools" \
+    --with-libintl-type="static" \
     --with-sysroot="$sysroot_prefix" \
     --without-cloog \
     --without-isl
@@ -83,16 +99,17 @@ prepare_for_build \
     # --enable-threads=posix \
     # --with-native-system-header-dir="/usr/include" \
     # --enable-checking=yes \
+    # --enable-__cxa_atexit \
 
-make -C "$build_dir" -j$(nproc) LDFLAGS='-static'
-make -C "$build_dir" -j$(nproc) DESTDIR="$toolchain" INSTALL=$(command -v install) install
+do_make -j$(nproc) LDFLAGS='-static'
+do_make -j$(nproc) INSTALL=$(command -v install) install
 
-     # FLAGS_FOR_TARGET="-I $sysroot/usr/include -I $sysroot/include -I $sysroot/$target/include" \
-# # Force normal include directories - the ones that were built into the binary are screwed because of
+# FLAGS_FOR_TARGET="-I $sysroot/usr/include -I $sysroot/include -I $sysroot/$target/include" \
+    # # Force normal include directories - the ones that were built into the binary are screwed because of
 # # GCC's pseudo-Unix path deduction
 # cat "$build_dir/gcc/specs" \
-#     | sed '/^\*cpp_unique_options:/,/^$/ s|%I|%I %{!nostdinc:-isystem %R/usr/include -isystem %R/include -isystem %R/usr/local/include}|' \
-#           > "$toolchain/lib/gcc/powerpc-linux-gnu/$gcc_version/specs"
+    #     | sed '/^\*cpp_unique_options:/,/^$/ s|%I|%I %{!nostdinc:-isystem %R/usr/include -isystem %R/include -isystem %R/usr/local/include}|' \
+    #           > "$toolchain/lib/gcc/powerpc-linux-gnu/$gcc_version/specs"
 
 # BURN ALL LIBTOOL ARCHIVES - they cause nothing but trouble! Overlinking, disrespecting
 # --with-build-sysroot, and false positives that cause `ld` to freeze. Gentoo, Debian, Arch, Fedora,
@@ -101,4 +118,4 @@ make -C "$build_dir" -j$(nproc) DESTDIR="$toolchain" INSTALL=$(command -v instal
 #find "$host_tools" -name '*.la' -delete
 
 # We're gonna build this 4 times, so we'll need to move the directory
-mv "$source_name" "stage-2-$source_name"
+mv "$source_path" "${project_builds}/stage-2-${source_name}"

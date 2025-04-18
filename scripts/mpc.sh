@@ -1,15 +1,14 @@
 #! /usr/bin/env bash
 
-set -e
-set -u
+set -euo pipefail
 #set -x # Uncomment to debug
 
 
 script_source=${BASH_SOURCE[0]}
 while [ -L "$script_source" ]; do
-  script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
-  script_source=$(readlink "$script_source")
-  [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
 done
 script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
 source "$script_parent/project_defs.sh"
@@ -21,8 +20,8 @@ source "$project_scripts/host-env.sh"
 mkdir -p "$host_tools"
 verify_ucrt64
 
-do_clean
 select_source 'mpc-1.2.1'
+do_clean
 do_configure \
     --disable-maintainer-mode \
     --disable-shared \

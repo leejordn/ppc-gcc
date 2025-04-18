@@ -6,30 +6,45 @@
 
 set -e
 set -u
+#set -x # Uncomment to debug
 set -o pipefail
 
-verify_msys
+script_source=${BASH_SOURCE[0]}
+while [ -L "$script_source" ]; do
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+done
+script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
 
-release_version=2.6.27.18
-source_name="linux-$release_version"
-source_dir="../sources/$source_name"
-output_dir="${source_name}-headers"
+source "$script_parent/project_defs.sh"
+unset script_parent
+unset script_source
 
-rm -rf "$output_dir"
-mkdir -p "$output_dir"
+# Linux expects in almost every make target that you are running it on Linux. I've tried all MSYS2
+# configurations, but it has only worked without error in WSL.
+verify_linux
+use_host_env
 
-make -j$(nproc) -C "$source_dir" O="$PWD/" ARCH=powerpc INSTALL_HDR_PATH="$output_dir" headers_install
+select_source 'linux-6.14.2'
+do_clean
+pushd . &>/dev/null
+cd "$build_path"
+# Not the order things are usually done in with `make`, but this is what the linux docs say
+make -C "$source_path" -j$(nproc)\
+     O="$build_path/" \
+     ARCH=powerpc \
+     INSTALL_HDR_PATH="$sysroot/usr" \
+     headers_install
 
-# make headers_check \
-#      -j$(nproc) \
-#      -C "$source_dir" \
-#      ARCH=powerpc \
-
-# make headers_install \
-#      -j$(nproc) \
-#      -C "$source_dir" \
-#      ARCH=powerpc \
-#      INSTALL_HDR_PATH="$output_dir"
+if [[ $? -ne 0 ]]; then
+    cat << EOF >&2
+--------------------------------------------------------------------------------
+  FAILED TO INSTALL KERNEL HEADERS
+--------------------------------------------------------------------------------
+EOF
+fi
+popd
 
 # Something like this after?
 # find linux-build/linux-2.6.27.18-headers -type f -name '.install' -o -name '*.cmd' -delete

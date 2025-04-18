@@ -3,20 +3,27 @@
 # Source this script before running any configur scripts. If you don't, configure screws up a lot of
 # these paths, especially LD, and you'll get very cryptic errors.
 
-# Assumes $toolchain/bin contains a working (stage-1) $target toolchain (e.g.
-# powerpc-linux-gnu-gcc)
+script_source=${BASH_SOURCE[0]}
+while [ -L "$script_source" ]; do
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+done
+script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+source "$script_parent/project_defs.sh"
+unset script_parent
+unset script_source
 
-source common-defs.sh
 
 activate ()
 {
     if [[ -n ${_cross_env_active+x} ]]; then
-        echo "Cross-compiling toolchain is active. Run `deactivate` first." >&2
-        exit 1
+        echo "Cross-compiling toolchain is active. Run "deactivate" first." >&2
+        return 1
     fi
     if [[ -n ${_host_env_active+x} ]]; then
-        echo "Host toolchain is active. Run `deactivate` first." >&2
-        exit 1
+        echo "Host toolchain is active. Run "deactivate" first." >&2
+        return 1
     fi
 
     export AR="$toolchain/bin/$target-ar"
@@ -32,9 +39,12 @@ activate ()
     export READELF="$toolchain/bin/$target-readelf"
     export STRIP="$toolchain/bin/$target-strip"
 
+    if [[ -n ${PS1+x} ]]; then
+        export _cross_env_old_ps1="$PS1"
+        export PS1="\n(cross-env) $PS1"
+    fi
+
     export _cross_env_old_path="$PATH"
-    export _cross_env_old_ps1="$PS1"
-    export PS1="\n(cross-env) $PS1"
     export PATH="$toolchain/bin:$host_tools/bin:$PATH"
 
     export _cross_env_active="true"

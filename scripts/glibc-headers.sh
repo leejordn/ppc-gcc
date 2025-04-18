@@ -1,33 +1,53 @@
 #! /usr/bin/env bash
 
-set -e
-#set -u
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#  IMPORTANT:
+#    "patches/glibc-2.19-headers.patch" need to be applied before this script will work:
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+set -euo pipefail
 #set -x # Uncomment to debug
 
-source_name='glibc-2.19'
-source scripts/common.sh
-source cross-env.sh
+script_source=${BASH_SOURCE[0]}
+while [ -L "$script_source" ]; do
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+done
+script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+source "$script_parent/project_defs.sh"
+unset script_parent
+unset script_source
+
 
 verify_msys
+use_cross_env
 
 # Linaro stuff
 export AUTOCONF=no
-export CC="$target-gcc"
-export CXX="$target-g++"
-export AR="$target-ar"
-export RANLIB="$target-ar"
-
 export BUILD_CC=gcc
-export BUILD_CPPFLAGS=""
-export BUILD_CFLAGS=""
+
+#export BUILD_CPPFLAGS=""
+#export BUILD_CFLAGS=""
 
 # Linaro does this but never defines the variables?
 # libc_cv_slibdir=$libc_cv_slibdir
 # libc_cv_rtlddir=$libc_cv_rtlddir
 
-parse_cli "$@"
+select_source 'glibc-2.19'
 
-prepare_for_build \
+# glibc can't be built on case-insensitive filesystems (wow). We can work around this by using fsutil on
+# the build directory (it turns out that only build artifacts clash). This must be done while the
+# directory is empty
+# fsutil file setCaseSensitiveInfo "$build_path" enable
+
+# glibc can't be built with GNU make versions about 2.43 because of a regression in the way job
+# pipelines work. So if the build fails, this is very pertinent information
+make --version | head -n1
+
+do_clean
+do_configure \
+    --build="x86_64-w64-mingw32" \
     --disable-bounded \
     --disable-omitfp \
     --disable-profile \
@@ -40,7 +60,6 @@ prepare_for_build \
     --host="$target" \
     --includedir=/usr/include \
     --prefix=/usr \
-    --target="$target" \
     --with-headers="$sysroot/usr/include" \
     --with-tls \
     --without-cvs \
@@ -48,16 +67,13 @@ prepare_for_build \
     --without-selinux \
     libc_cv_visibility_attribute=yes \
     libc_cv_broken_visibility_attribute=no \
-    libc_cv_forced_unwind=yes
+    libc_cv_forced_unwind=yes \
+    libc_cv_ld_no_whole_archive=yes
 
-make -C "$source_name" \
-     install-bootstrap-headers=yes \
-     install_root="$sysroot" \
-     INSTALL="$(which install)" \
-     install-headers
+do_make -j$(nproc) \
+        install-bootstrap-headers=yes \
+        install_root="$sysroot" \
+        INSTALL="$(which install)" \
+        install-headers
 
-# BURN ALL LIBTOOL ARCHIVES - they cause nothing but trouble! Overlinking, disrespecting
-# --with-build-sysroot, and false positives that cause `ld` to freeze. Gentoo, Debian, Arch, Fedora,
-# and many more Linux distros actually delete them aggressively on system start. This enables our
-# $host_tools directory (and cross toolchain sysroot) to be completely portable / relocatable
-#find "$host_tools" -name '*.la' -delete
+mv "$build_path" "stage-1-${build_path}"

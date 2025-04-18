@@ -19,15 +19,13 @@ source "$project_scripts/host-env.sh"
 
 mkdir -p "$host_tools"
 verify_ucrt64
-select_source 'isl-0.24'
+select_source 'gettext-0.22'
 
 do_clean
 do_configure \
-    --disable-maintainer-mode \
     --disable-shared \
     --enable-static \
-    --prefix="$host_tools" \
-    --with-gmp="$host_tools"
+    --prefix="$host_tools"
 
 do_make -j$(nproc)
 do_make -j$(nproc) install
@@ -39,6 +37,6 @@ do_make -j$(nproc) install
 find "$host_tools" -name '*.la' -delete
 
 
-
-
-source_name=
+# am_cv_lib_iconv=no
+# gl_cv_func_working_iconv=no
+# am_cv_func_iconv=no
