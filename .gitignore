@@ -1,9 +1,9 @@
 ### The massive subprojects and build folders
 sources/*
--sources/archives/fetch-sources.py
+!sources/archives/fetch-sources.py
 
 toolchain/*
--toolchain/powerpc-linux-gnu/sysroot/.gitkeep
+!toolchain/powerpc-linux-gnu/sysroot/.gitkeep
 
 build/*
 build/host-tools

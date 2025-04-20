@@ -15,9 +15,9 @@
 
   "One-liner" for convenience:
   ```sh
-  pacman -S \
-         msys/gcc msys/m4 msys/rsync msys/make msys/python msys/texinfo msys/gettext-devel \
-         ucrt64/mingw-w64-ucrt-x86_64-gcc
+  pacman -s \
+         msys/python msys/gcc msys/m4 msys/rsync msys/make \
+         msys/texinfo msys/gettext-devel ucrt64/mingw-w64-ucrt-x86_64-gcc
   ```
 
 - Access to a Linux host (WSL, Hyper-V or a physical machine) with a C compiler so that you can run

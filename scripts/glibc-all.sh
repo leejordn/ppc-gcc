@@ -1,18 +1,35 @@
 #! /usr/bin/env bash
 
-set -e
-#set -u
+set -euo pipefail
 #set -x # Uncomment to debug
 
-source_name='glibc-2.19'
-source scripts/common.sh
-source cross-env.sh
+script_source=${BASH_SOURCE[0]}
+while [ -L "$script_source" ]; do
+    script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+    script_source=$(readlink "$script_source")
+    [[ $script_source != /* ]] && script_source=$script_parent/$script_source
+done
+script_parent=$( cd -P "$( dirname "$script_source" )" >/dev/null 2>&1 && pwd )
+source "$script_parent/project_defs.sh"
+unset script_parent
+unset script_source
+
+verify_ucrt64
+use_cross_env
 
 export BUILD_CC=gcc
-
-parse_cli "$@"
+export BUILD_CFLAGS="-O2"
 export CFLAGS="-O2 -mcpu=7450 -mtune=7450 -maltivec -mabi=altivec -fcommon"
-prepare_for_build \
+
+select_source 'glibc-2.19'
+do_clean
+
+# glibc can't be built on case-insensitive filesystems (wow). We can work around this by using fsutil on
+# the build directory (it turns out that only build artifacts clash). This must be done while the
+# directory is empty
+fsutil file setCaseSensitiveInfo "$build_path" enable
+
+do_configure \
     --build="$(gcc -dumpmachine)" \
     --disable-bounded \
     --disable-omitfp \
@@ -35,15 +52,16 @@ prepare_for_build \
     libc_cv_broken_visibility_attribute=no \
     libc_cv_forced_unwind=yes \
     libc_cv_slibdir=/usr/lib \
-    libc_cv_rtlddir=/lib
+    libc_cv_rtlddir=/lib \
+    libc_cv_ld_no_whole_archive=yes
 
 # --disable-sanity-checks \
 
 PATH="$host_tools/bin:$PATH"
 pwd
 # There seems to be race conditions for parallel builds =( so no -j
-make -C "$source_name"
-make -C "$source_name" \
+do_make
+do_make -j$(nproc) \
      install_root="$sysroot" \
      INSTALL="$(which install)" \
      install
